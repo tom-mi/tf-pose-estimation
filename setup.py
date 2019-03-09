@@ -6,8 +6,7 @@ import os
 import subprocess
 import setuptools
 from distutils.core import setup, Extension
-
-import numpy as np
+from distutils.command.build_ext import build_ext
 
 _VERSION = '0.1.1'
 
@@ -34,13 +33,21 @@ DEPENDENCY_LINKS = [
     'git+https://github.com/ppwwyyxx/tensorpack.git#egg=tensorpack',
 ]
 
+
+class NumpyBuildExtCommand(build_ext):
+
+        def run(self):
+            import numpy
+            self.include_dirs.append(numpy.get_include())
+            build_ext.run(self)
+
+
 EXT = Extension('_pafprocess',
                 sources=[
                     'tf_pose/pafprocess/pafprocess_wrap.cpp',
                     'tf_pose/pafprocess/pafprocess.cpp',
                 ],
-                swig_opts=['-c++'],
-                include_dirs=[np.get_include()])
+                swig_opts=['-c++'])
 
 setuptools.setup(
     name='tf-pose',
@@ -63,4 +70,5 @@ setuptools.setup(
     py_modules=[
         "pafprocess"
     ],
-    zip_safe=False)
+    zip_safe=False,
+    cmdclass={'build_ext': NumpyBuildExtCommand})
